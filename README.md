@@ -23,7 +23,7 @@ Composer Installation
 Execute:
 
 ```
-composer require seunmatt/codeigniter-log-viewer
+duongnhathao/codeigniter-log-viewer
 ```
 
 Controller Integration for Browser Display
