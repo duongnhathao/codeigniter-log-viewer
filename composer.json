@@ -16,12 +16,21 @@
   "require": {
     "php": ">=7.1"
   },
-"repositories":[
+"repositories": [
     {
-        "type": "vcs",
-        "url": "https://github.com/duongnhathao/codeigniter-log-viewer"
+        "type":"package",
+        "package": {
+          "name": "duongnhathao/codeigniter-log-viewer",
+          "version":"master",
+          "source": {
+              "url": "https://github.com/duongnhathao/codeigniter-log-viewer.git",
+              "type": "git",
+              "reference":"master"
+            }
+        }
     }
 ],
+
   "autoload": {
     "psr-4": {
       "CILogViewer\\": "src/"
