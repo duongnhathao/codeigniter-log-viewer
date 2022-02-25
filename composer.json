@@ -10,6 +10,7 @@
       "email": "duongnhathao001@gmail.com"
     }
   ],
+  "minimum-stability": "dev",
   "archive" : {
     "exclude" : ["/sample.png"]
   },
