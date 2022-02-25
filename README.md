@@ -23,7 +23,7 @@ Composer Installation
 Execute:
 
 ```
-duongnhathao/codeigniter-log-viewer
+composer require duongnhathao/codeigniter-log-viewer
 ```
 
 Controller Integration for Browser Display
@@ -210,8 +210,6 @@ SECURITY NOTE
 Contributions
 =============
 
-**Love this library? You can support by [buying me a coffee](http://wallet.ng/pay/ossmatt)** :coffee:
-
 Found a bug? Kindly create an issue for it. 
 
 Want to contribute? Submit your pull-request(s)
@@ -220,7 +218,7 @@ Remember to :star: star the repo and share with friends
 
 Author
 ======
-Made with :heart: by [Seun Matt](https://smattme.com)
+Made with :heart: by [Duong Nhat Hao](https://github.com/duongnhathao) base on [Seun Matt](https://smattme.com)
 
 CHANGELOG
 =========
