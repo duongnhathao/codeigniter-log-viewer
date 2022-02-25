@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CodeIgniter log viewer demo</title>
+    <title>CodeIgniter log viewer</title>
 
     <!-- Bootstrap -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
@@ -48,12 +48,11 @@
     <div class="row">
         <div class="col-sm-3 col-md-2 sidebar">
             <h1><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span> CodeIgniter Log Viewer</h1>
-            <p class="text-muted"><i>by <a href="https://github.com/SeunMatt" target="_blank">Seun Matt</a></i></p>
             <div class="list-group">
-                <?php if(empty($files)): ?>
+                <?php if (empty($files)): ?>
                     <a class="list-group-item liv-active">No Log Files Found</a>
                 <?php else: ?>
-                    <?php foreach($files as $file): ?>
+                    <?php foreach ($files as $file): ?>
                         <a href="?f=<?= base64_encode($file); ?>"
                            class="list-group-item <?= ($currentFile == $file) ? "llv-active" : "" ?>">
                             <?= $file; ?>
@@ -63,24 +62,24 @@
             </div>
         </div>
         <div class="col-sm-9 col-md-10 table-container">
-            <?php if(is_null($logs)): ?>
-                <div>
-                    <br><br>
-                    <strong>Log file > 50MB, please download it.</strong>
-                    <br><br>
-                </div>
-            <?php else: ?>
-                <table id="table-log" class="table table-striped">
-                    <thead>
-                    <tr>
-                        <th>Level</th>
-                        <th>Date</th>
-                        <th>Content</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-
-                    <?php foreach($logs as $key => $log): ?>
+            <?php if(is_null($logs)){ ?>
+            <div>
+                <br><br>
+                <strong>Log file > 50MB, please download it.</strong>
+                <br><br>
+            </div>
+            <?php }elseif(!$is_content){ ?>
+            <table id="table-log" class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Level</th>
+                    <th>Date</th>
+                    <th>Content</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php if ( ! $is_content) { ?>
+                    <?php foreach ($logs as $key => $log): ?>
                         <tr data-display="stack<?= $key; ?>">
 
                             <td class="text-<?= $log['class']; ?>">
@@ -106,21 +105,43 @@
                             </td>
                         </tr>
                     <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
+                <?php } ?>
+                </tbody>
+            </table>
+            <?php }elseif($is_content){ ?>
+
+            <pre><?php
+                $pieces = explode("\n\n", $logs);
+                if ($search){
+                    foreach ($pieces as $piece){
+                        if (str_contains($piece, $search)){
+                            echo $piece."\n\n";
+                        }
+                    }
+                }
+                else
+                {
+                    $pieces = array_slice($pieces, -20);
+                    foreach ($pieces as $piece){
+                            echo $piece."\n\n";
+
+                    }
+                }
+                ?></pre>
+            <?php } ?>
             <div>
-                <?php if($currentFile): ?>
+                <?php if ($currentFile): ?>
                     <a href="?dl=<?= base64_encode($currentFile); ?>">
                         <span class="glyphicon glyphicon-download-alt"></span>
                         Download file
                     </a>
                     -
                     <a id="delete-log" href="?del=<?= base64_encode($currentFile); ?>"><span
-                                class="glyphicon glyphicon-trash"></span> Delete file</a>
-                    <?php if(count($files) > 1): ?>
+                            class="glyphicon glyphicon-trash"></span> Delete file</a>
+                    <?php if (count($files) > 1): ?>
                         -
-                        <a id="delete-all-log" href="?del=<?= base64_encode("all"); ?>"><span class="glyphicon glyphicon-trash"></span> Delete all files</a>
+                        <a id="delete-all-log" href="?del=<?= base64_encode("all"); ?>"><span
+                                class="glyphicon glyphicon-trash"></span> Delete all files</a>
                     <?php endif; ?>
                 <?php endif; ?>
             </div>
@@ -132,28 +153,28 @@
 <script src="https://cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/plug-ins/9dcbecd42ad/integration/bootstrap/3/dataTables.bootstrap.js"></script>
 <script>
-    $(document).ready(function () {
+  $(document).ready(function() {
 
-        $('.table-container tr').on('click', function () {
-            $('#' + $(this).data('display')).toggle();
-        });
-
-        $('#table-log').DataTable({
-            "order": [],
-            "stateSave": true,
-            "stateSaveCallback": function (settings, data) {
-                window.localStorage.setItem("datatable", JSON.stringify(data));
-            },
-            "stateLoadCallback": function (settings) {
-                var data = JSON.parse(window.localStorage.getItem("datatable"));
-                if (data) data.start = 0;
-                return data;
-            }
-        });
-        $('#delete-log, #delete-all-log').click(function () {
-            return confirm('Are you sure?');
-        });
+    $('.table-container tr').on('click', function() {
+      $('#' + $(this).data('display')).toggle();
     });
+
+    $('#table-log').DataTable({
+      'order': [],
+      'stateSave': true,
+      'stateSaveCallback': function(settings, data) {
+        window.localStorage.setItem('datatable', JSON.stringify(data));
+      },
+      'stateLoadCallback': function(settings) {
+        var data = JSON.parse(window.localStorage.getItem('datatable'));
+        if (data) data.start = 0;
+        return data;
+      },
+    });
+    $('#delete-log, #delete-all-log').click(function() {
+      return confirm('Are you sure?');
+    });
+  });
 </script>
 </body>
 </html>

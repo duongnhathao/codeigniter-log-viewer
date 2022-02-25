@@ -4,10 +4,11 @@
  * Date: 09-Jan-18
  * Time: 4:30 AM
  */
+
 namespace CILogViewer;
 
-defined('BASEPATH') OR exit('No direct script access allowed');
-defined('APPPATH') OR exit('Not a Code Igniter Environment');
+defined('BASEPATH') or exit('No direct script access allowed');
+defined('APPPATH') or exit('Not a Code Igniter Environment');
 
 
 class CILogViewer {
@@ -47,7 +48,6 @@ class CILogViewer {
     const LOG_FOLDER_PATH_CONFIG_KEY = "clv_log_folder_path";
 
 
-
     /**
      * Here we define the paths for the view file
      * that's used by the library to present logs on the UI
@@ -74,7 +74,8 @@ class CILogViewer {
     private const API_CMD_DELETE = "delete";
 
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->init();
     }
 
@@ -84,9 +85,11 @@ class CILogViewer {
      * sets the configuration variables
      * @throws \Exception
      */
-    private function init() {
+    private function init()
+    {
 
-        if(!function_exists("get_instance")) {
+        if ( ! function_exists("get_instance"))
+        {
             throw new \Exception("This library works in a Code Igniter Project/Environment");
         }
 
@@ -94,8 +97,8 @@ class CILogViewer {
         $this->CI = &get_instance();
 
         //configure the log folder path and the file pattern for all the logs in the folder
-        $this->logFolderPath =  !is_null($this->CI->config->item(self::LOG_FOLDER_PATH_CONFIG_KEY)) ? rtrim($this->CI->config->item(self::LOG_FOLDER_PATH_CONFIG_KEY), "/") : rtrim(APPPATH, "/") . "/logs";
-        $this->logFilePattern = !is_null($this->CI->config->item(self::LOG_FILE_PATTERN_CONFIG_KEY)) ? $this->CI->config->item(self::LOG_FILE_PATTERN_CONFIG_KEY) : "log-*.php";
+        $this->logFolderPath = ! is_null($this->CI->config->item(self::LOG_FOLDER_PATH_CONFIG_KEY)) ? rtrim($this->CI->config->item(self::LOG_FOLDER_PATH_CONFIG_KEY), "/") : rtrim(APPPATH, "/") . "/logs";
+        $this->logFilePattern = ! is_null($this->CI->config->item(self::LOG_FILE_PATTERN_CONFIG_KEY)) ? $this->CI->config->item(self::LOG_FILE_PATTERN_CONFIG_KEY) : "log-*.php";
 
         //concatenate to form Full Log Path
         $this->fullLogFilePath = $this->logFolderPath . "/" . $this->logFilePattern;
@@ -104,9 +107,10 @@ class CILogViewer {
         //use VIEWPATH constant so the CI can find views location and this constant will be defined in index.php file.
         $this->LOG_VIEW_FILE_FOLDER = VIEWPATH . "cilogviewer";
         $this->LOG_VIEW_FILE_PATH = rtrim($this->LOG_VIEW_FILE_FOLDER) . "/" . $this->LOG_VIEW_FILE_NAME;
-        if(!file_exists($this->LOG_VIEW_FILE_PATH)) {
+        if ( ! file_exists($this->LOG_VIEW_FILE_PATH))
+        {
 
-            if(!is_dir($this->LOG_VIEW_FILE_FOLDER))
+            if ( ! is_dir($this->LOG_VIEW_FILE_FOLDER))
                 mkdir($this->LOG_VIEW_FILE_FOLDER);
 
             file_put_contents($this->LOG_VIEW_FILE_PATH, file_get_contents($this->LOG_VIEW_FILE_NAME, FILE_USE_INCLUDE_PATH));
@@ -120,10 +124,12 @@ class CILogViewer {
      * @param $fileName optional base64_encoded filename of the log file to process.
      * @returns the parse view file content as a string that can be echoed
      * */
-    public function showLogs() {
+    public function showLogs()
+    {
 
 
-        if(!is_null($this->CI->input->get("del"))) {
+        if ( ! is_null($this->CI->input->get("del")))
+        {
             $this->deleteFiles(base64_decode($this->CI->input->get("del")));
             redirect($this->CI->uri->uri_string());
             return;
@@ -133,133 +139,155 @@ class CILogViewer {
         //if the supplied file exists, then perform download
         //otherwise, just ignore which will resolve to page reloading
         $dlFile = $this->CI->input->get("dl");
-        if(!is_null($dlFile) && file_exists($this->logFolderPath . "/" . basename(base64_decode($dlFile))) ) {
+        if ( ! is_null($dlFile) && file_exists($this->logFolderPath . "/" . basename(base64_decode($dlFile))))
+        {
             $file = $this->logFolderPath . "/" . basename(base64_decode($dlFile));
             $this->downloadFile($file);
         }
 
-        if(!is_null($this->CI->input->get(self::API_QUERY_PARAM))) {
+        if ( ! is_null($this->CI->input->get(self::API_QUERY_PARAM)))
+        {
             return $this->processAPIRequests($this->CI->input->get(self::API_QUERY_PARAM));
         }
 
         //it will either get the value of f or return null
-        $fileName =  $this->CI->input->get("f");
+        $fileName = $this->CI->input->get("f");
 
         //get the log files from the log directory
         $files = $this->getFiles();
 
         //let's determine what the current log file is
-        if(!is_null($fileName)) {
+        if ( ! is_null($fileName))
+        {
             $currentFile = $this->logFolderPath . "/" . basename(base64_decode($fileName));
-        }
-        else if(is_null($fileName) && !empty($files)) {
+        } else if (is_null($fileName) && ! empty($files))
+        {
             $currentFile = $this->logFolderPath . "/" . $files[0];
-        } else {
-            $currentFile = null;
+        } else
+        {
+            $currentFile = NULL;
         }
 
         //if the resolved current file is too big
         //just trigger a download of the file
         //otherwise process its content as log
 
-        if(!is_null($currentFile) && file_exists($currentFile)) {
+        if ( ! is_null($currentFile) && file_exists($currentFile))
+        {
 
             $fileSize = filesize($currentFile);
 
-            if(is_int($fileSize) && $fileSize > self::MAX_LOG_SIZE) {
+            if (is_int($fileSize) && $fileSize > self::MAX_LOG_SIZE)
+            {
                 //trigger a download of the current file instead
-                $logs = null;
+                $logs = NULL;
+            } else
+            {
+                if (get_file_extension($currentFile) !== 'php')
+                {
+                    $is_content = TRUE;
+                    $logs = file_get_contents($currentFile);
+                } else
+                {
+                    $logs = $this->processLogs($this->getLogs($currentFile));
+                }
             }
-            else {
-                $logs =  $this->processLogs($this->getLogs($currentFile));
-            }
-        }
-        else {
+        } else
+        {
             $logs = [];
         }
 
+        $data['is_content'] = $is_content;
         $data['logs'] = $logs;
-        $data['files'] =  !empty($files) ? $files : [];
-        $data['currentFile'] = !is_null($currentFile) ? basename($currentFile) : "";
-        return $this->CI->load->view(self::CI_LOG_VIEW_FILE_PATH, $data, true);
+        $data['files'] = ! empty($files) ? $files : [];
+        $data['currentFile'] = ! is_null($currentFile) ? basename($currentFile) : "";
+        return $this->CI->load->view(self::CI_LOG_VIEW_FILE_PATH, $data, TRUE);
     }
 
 
-    private function processAPIRequests($command) {
+    private function processAPIRequests($command)
+    {
 
-        if($command === self::API_CMD_LIST) {
+        if ($command === self::API_CMD_LIST)
+        {
             //respond with a list of all the files
-            $response["status"] = true;
+            $response["status"] = TRUE;
             $response["log_files"] = self::getFilesBase64Encoded();
-        }
-        else if($command === self::API_CMD_VIEW) {
+        } else if ($command === self::API_CMD_VIEW)
+        {
             //respond to view the logs of a particular file
             $file = $this->CI->input->get(self::API_FILE_QUERY_PARAM);
             $response["log_files"] = self::getFilesBase64Encoded();
 
-            if(is_null($file) || empty($file)) {
-                $response["status"] = false;
+            if (is_null($file) || empty($file))
+            {
+                $response["status"] = FALSE;
                 $response["error"]["message"] = "Invalid File Name Supplied: [" . json_encode($file) . "]";
                 $response["error"]["code"] = 400;
-            }
-            else {
+            } else
+            {
                 $singleLine = $this->CI->input->get(self::API_LOG_STYLE_QUERY_PARAM);
-                $singleLine = !is_null($singleLine) && ($singleLine === true || $singleLine === "true" || $singleLine === "1") ? true : false;
+                $singleLine = ! is_null($singleLine) && ($singleLine === TRUE || $singleLine === "true" || $singleLine === "1") ? TRUE : FALSE;
                 $logs = $this->processLogsForAPI($file, $singleLine);
-                $response["status"] = true;
+                $response["status"] = TRUE;
                 $response["logs"] = $logs;
             }
-        }
-        else if($command === self::API_CMD_DELETE) {
+        } else if ($command === self::API_CMD_DELETE)
+        {
 
             $file = $this->CI->input->get(self::API_FILE_QUERY_PARAM);
 
-            if(is_null($file)) {
-                $response["status"] = false;
+            if (is_null($file))
+            {
+                $response["status"] = FALSE;
                 $response["error"]["message"] = "NULL value is not allowed for file param";
                 $response["error"]["code"] = 400;
-            }
-            else {
+            } else
+            {
 
                 //decode file if necessary
-                $fileExists = false;
+                $fileExists = FALSE;
 
-                if($file !== "all") {
+                if ($file !== "all")
+                {
                     $file = basename(base64_decode($file));
                     $fileExists = file_exists($this->logFolderPath . "/" . $file);
-                }
-                else {
+                } else
+                {
                     //check if the directory exists
                     $fileExists = file_exists($this->logFolderPath);
                 }
 
 
-                if($fileExists) {
+                if ($fileExists)
+                {
                     $this->deleteFiles($file);
-                    $response["status"] = true;
+                    $response["status"] = TRUE;
                     $response["message"] = "File [" . $file . "] deleted";
-                }
-                else {
-                    $response["status"] = false;
+                } else
+                {
+                    $response["status"] = FALSE;
                     $response["error"]["message"] = "File does not exist";
                     $response["error"]["code"] = 404;
                 }
 
 
             }
-        }
-        else {
-            $response["status"] = false;
+        } else
+        {
+            $response["status"] = FALSE;
             $response["error"]["message"] = "Unsupported Query Command [" . $command . "]";
             $response["error"]["code"] = 400;
         }
 
         //convert response to json and respond
         header("Content-Type: application/json");
-        if(!$response["status"]) {
+        if ( ! $response["status"])
+        {
             //set a generic bad request code
             http_response_code(400);
-        } else {
+        } else
+        {
             http_response_code(200);
         }
         return json_encode($response);
@@ -273,48 +301,56 @@ class CILogViewer {
      * @params logs. The raw logs as read from the log file
      * @return array. An [[], [], [] ...] where each element is a processed log line
      * */
-    private function processLogs($logs) {
+    private function processLogs($logs)
+    {
 
-        if(is_null($logs)) {
-            return null;
+        if (is_null($logs))
+        {
+            return NULL;
         }
 
         $superLog = [];
 
-        foreach ($logs as $log) {
+        foreach ($logs as $log)
+        {
 
             //get the logLine Start
             $logLineStart = $this->getLogLineStart($log);
 
-            if(!empty($logLineStart)) {
+            if ( ! empty($logLineStart))
+            {
                 //this is actually the start of a new log and not just another line from previous log
                 $level = $this->getLogLevel($logLineStart);
                 $data = [
                     "level" => $level,
-                    "date" => $this->getLogDate($logLineStart),
-                    "icon" => self::$levelsIcon[$level],
+                    "date"  => $this->getLogDate($logLineStart),
+                    "icon"  => self::$levelsIcon[$level],
                     "class" => self::$levelClasses[$level],
                 ];
 
                 $logMessage = preg_replace(self::LOG_LINE_START_PATTERN, '', $log);
 
-                if(strlen($logMessage) > self::MAX_STRING_LENGTH) {
+                if (strlen($logMessage) > self::MAX_STRING_LENGTH)
+                {
                     $data['content'] = substr($logMessage, 0, self::MAX_STRING_LENGTH);
                     $data["extra"] = substr($logMessage, (self::MAX_STRING_LENGTH + 1));
-                } else {
+                } else
+                {
                     $data["content"] = $logMessage;
                 }
 
                 array_push($superLog, $data);
 
-            } else if(!empty($superLog)) {
+            } else if ( ! empty($superLog))
+            {
                 //this log line is a continuation of previous logline
                 //so let's add them as extra
                 $prevLog = $superLog[count($superLog) - 1];
                 $extra = (array_key_exists("extra", $prevLog)) ? $prevLog["extra"] : "";
                 $prevLog["extra"] = $extra . "<br>" . $log;
                 $superLog[count($superLog) - 1] = $prevLog;
-            } else {
+            } else
+            {
                 //this means the file has content that are not logged
                 //using log_message()
                 //they may be sensitive! so we are just skipping this
@@ -341,9 +377,10 @@ class CILogViewer {
      * @return array|null
      * @internal param $logs
      */
-    private function processLogsForAPI($fileNameInBase64, $singleLine = false) {
+    private function processLogsForAPI($fileNameInBase64, $singleLine = FALSE)
+    {
 
-        $logs = null;
+        $logs = NULL;
 
         //let's prepare the log file name sent from the client
         $currentFile = $this->prepareRawFileName($fileNameInBase64);
@@ -351,15 +388,18 @@ class CILogViewer {
         //if the resolved current file is too big
         //just return null
         //otherwise process its content as log
-        if(!is_null($currentFile)) {
+        if ( ! is_null($currentFile))
+        {
 
             $fileSize = filesize($currentFile);
 
-            if (is_int($fileSize) && $fileSize > self::MAX_LOG_SIZE) {
+            if (is_int($fileSize) && $fileSize > self::MAX_LOG_SIZE)
+            {
                 //trigger a download of the current file instead
-                $logs = null;
-            } else {
-                $logs =  $this->getLogsForAPI($currentFile, $singleLine);
+                $logs = NULL;
+            } else
+            {
+                $logs = $this->getLogsForAPI($currentFile, $singleLine);
             }
         }
 
@@ -374,18 +414,22 @@ class CILogViewer {
      *
      * @return log level e.g. ERROR, DEBUG, INFO
      * */
-    private function getLogLevel($logLineStart) {
+    private function getLogLevel($logLineStart)
+    {
         preg_match(self::LOG_LEVEL_PATTERN, $logLineStart, $matches);
         return $matches[0];
     }
 
-    private function getLogDate($logLineStart) {
+    private function getLogDate($logLineStart)
+    {
         return preg_replace(self::LOG_DATE_PATTERN, '', $logLineStart);
     }
 
-    private function getLogLineStart($logLine) {
+    private function getLogLineStart($logLine)
+    {
         preg_match(self::LOG_LINE_START_PATTERN, $logLine, $matches);
-        if(!empty($matches)) {
+        if ( ! empty($matches))
+        {
             return $matches[0];
         }
         return "";
@@ -398,10 +442,11 @@ class CILogViewer {
      * @returns array | each line of file contents is an entry in the returned array.
      * @params complete fileName
      * */
-    private function getLogs($fileName) {
+    private function getLogs($fileName)
+    {
         $size = filesize($fileName);
-        if(!$size || $size > self::MAX_LOG_SIZE)
-            return null;
+        if ( ! $size || $size > self::MAX_LOG_SIZE)
+            return NULL;
         return file($fileName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     }
 
@@ -418,12 +463,13 @@ class CILogViewer {
      * @param bool $singleLine
      * @return bool|string
      */
-    private function getLogsForAPI($fileName, $singleLine = false) {
+    private function getLogsForAPI($fileName, $singleLine = FALSE)
+    {
         $size = filesize($fileName);
-        if(!$size || $size > self::MAX_LOG_SIZE)
+        if ( ! $size || $size > self::MAX_LOG_SIZE)
             return "File Size too Large. Please donwload it locally";
 
-        return (!$singleLine) ? file($fileName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : file_get_contents($fileName);
+        return ( ! $singleLine) ? file($fileName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : file_get_contents($fileName);
     }
 
 
@@ -435,15 +481,17 @@ class CILogViewer {
      * @param boolean. If true returns the basename of the files otherwise full path
      * @returns array of file
      * */
-    private function getFiles($basename = true)
+    private function getFiles($basename = TRUE)
     {
 
         $files = glob($this->fullLogFilePath);
 
         $files = array_reverse($files);
         $files = array_filter($files, 'is_file');
-        if ($basename && is_array($files)) {
-            foreach ($files as $k => $file) {
+        if ($basename && is_array($files))
+        {
+            foreach ($files as $k => $file)
+            {
                 $files[$k] = basename($file);
             }
         }
@@ -460,7 +508,8 @@ class CILogViewer {
      * @internal param bool $appendURL
      * @internal param bool $basename
      */
-    private function getFilesBase64Encoded() {
+    private function getFilesBase64Encoded()
+    {
 
         $files = glob($this->fullLogFilePath);
 
@@ -471,7 +520,8 @@ class CILogViewer {
 
         //if we're to return the base name of the files
         //let's do that here
-        foreach ($files as $file) {
+        foreach ($files as $file)
+        {
             array_push($finalFiles, ["file_b64" => base64_encode(basename($file)), "file_name" => basename($file)]);
         }
 
@@ -483,12 +533,14 @@ class CILogViewer {
      * Delete one or more log file in the logs directory
      * @param filename. It can be all - to delete all log files - or specific for a file
      * */
-    private function deleteFiles($fileName) {
+    private function deleteFiles($fileName)
+    {
 
-        if($fileName == "all") {
+        if ($fileName == "all")
+        {
             array_map("unlink", glob($this->fullLogFilePath));
-        }
-        else {
+        } else
+        {
             unlink($this->logFolderPath . "/" . basename($fileName));
         }
         return;
@@ -500,10 +552,11 @@ class CILogViewer {
      * hence, the file exist check has ot be done by the caller
      * @param $fileName the complete file path
      * */
-    private function downloadFile($file) {
+    private function downloadFile($file)
+    {
         header('Content-Description: File Transfer');
         header('Content-Type: application/octet-stream');
-        header('Content-Disposition: attachment; filename="'.basename($file).'"');
+        header('Content-Disposition: attachment; filename="' . basename($file) . '"');
         header('Expires: 0');
         header('Cache-Control: must-revalidate');
         header('Pragma: public');
@@ -521,19 +574,20 @@ class CILogViewer {
      * @return null|string
      * @internal param $fileName
      */
-    private function prepareRawFileName($fileNameInBase64) {
+    private function prepareRawFileName($fileNameInBase64)
+    {
 
         //let's determine what the current log file is
-        if(!is_null($fileNameInBase64) && !empty($fileNameInBase64)) {
-            $currentFile = $this->logFolderPath . "/". basename(base64_decode($fileNameInBase64));
-        }
-        else {
-            $currentFile = null;
+        if ( ! is_null($fileNameInBase64) && ! empty($fileNameInBase64))
+        {
+            $currentFile = $this->logFolderPath . "/" . basename(base64_decode($fileNameInBase64));
+        } else
+        {
+            $currentFile = NULL;
         }
 
         return $currentFile;
     }
-
 
 
 }
