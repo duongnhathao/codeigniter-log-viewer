@@ -1,6 +1,6 @@
 <?php
 /**
- * Author: Seun Matt (https://github.com/SeunMatt)
+ * Author: Seun Matt - Custom By Duong Nhat Hao
  * Date: 09-Jan-18
  * Time: 4:30 AM
  */
