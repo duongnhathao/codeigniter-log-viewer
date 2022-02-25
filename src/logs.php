@@ -62,72 +62,96 @@
             </div>
         </div>
         <div class="col-sm-9 col-md-10 table-container">
-            <?php if(is_null($logs)){ ?>
-            <div>
-                <br><br>
-                <strong>Log file > 50MB, please download it.</strong>
-                <br><br>
-            </div>
-            <?php }elseif(!$is_content){ ?>
-            <table id="table-log" class="table table-striped">
-                <thead>
-                <tr>
-                    <th>Level</th>
-                    <th>Date</th>
-                    <th>Content</th>
-                </tr>
-                </thead>
-                <tbody>
-                <?php if ( ! $is_content) { ?>
-                    <?php foreach ($logs as $key => $log): ?>
-                        <tr data-display="stack<?= $key; ?>">
+            <?php if (is_null($logs)) { ?>
+                <div>
+                    <br><br>
+                    <strong>Log file > 50MB, please download it.</strong>
+                    <br><br>
+                </div>
+            <?php } elseif ( ! $is_content) { ?>
+                <table id="table-log" class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Level</th>
+                        <th>Date</th>
+                        <th>Content</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if ( ! $is_content) { ?>
+                        <?php foreach ($logs as $key => $log): ?>
+                            <tr data-display="stack<?= $key; ?>">
 
-                            <td class="text-<?= $log['class']; ?>">
-                                <span class="<?= $log['icon']; ?>" aria-hidden="true"></span>
-                                &nbsp;<?= $log['level']; ?>
-                            </td>
-                            <td class="date"><?= $log['date']; ?></td>
-                            <td class="text">
-                                <?php if (array_key_exists("extra", $log)): ?>
-                                    <a class="pull-right expand btn btn-default btn-xs"
-                                       data-display="stack<?= $key; ?>">
-                                        <span class="glyphicon glyphicon-search"></span>
-                                    </a>
-                                <?php endif; ?>
-                                <?= $log['content']; ?>
-                                <?php if (array_key_exists("extra", $log)): ?>
-                                    <div class="stack" id="stack<?= $key; ?>"
-                                         style="display: none; white-space: pre-wrap;">
-                                        <?= $log['extra'] ?>
-                                    </div>
-                                <?php endif; ?>
+                                <td class="text-<?= $log['class']; ?>">
+                                    <span class="<?= $log['icon']; ?>" aria-hidden="true"></span>
+                                    &nbsp;<?= $log['level']; ?>
+                                </td>
+                                <td class="date"><?= $log['date']; ?></td>
+                                <td class="text">
+                                    <?php if (array_key_exists("extra", $log)): ?>
+                                        <a class="pull-right expand btn btn-default btn-xs"
+                                           data-display="stack<?= $key; ?>">
+                                            <span class="glyphicon glyphicon-search"></span>
+                                        </a>
+                                    <?php endif; ?>
+                                    <?= $log['content']; ?>
+                                    <?php if (array_key_exists("extra", $log)): ?>
+                                        <div class="stack" id="stack<?= $key; ?>"
+                                             style="display: none; white-space: pre-wrap;">
+                                            <?= $log['extra'] ?>
+                                        </div>
+                                    <?php endif; ?>
 
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php } ?>
-                </tbody>
-            </table>
-            <?php }elseif($is_content){ ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php } ?>
+                    </tbody>
+                </table>
+            <?php } elseif ($is_content) { ?>
 
-            <pre><?php
-                $pieces = explode("\n\n", $logs);
-                if ($search){
-                    foreach ($pieces as $piece){
-                        if (str_contains($piece, $search)){
-                            echo $piece."\n\n";
+                <pre><?php
+                    $pieces = explode("\n\n", $logs);
+                    $pieces = array_reverse($pieces);
+                    if ($search)
+                    {
+                        foreach ($pieces as $piece)
+                        {
+                            if (str_contains($piece, $search))
+                            {
+                                if ($not_include)
+                                {
+                                    if ( ! str_contains($piece, $not_include))
+                                    {
+                                        echo $piece . "\n\n";
+
+                                    }
+                                } else
+                                {
+                                    echo $piece . "\n\n";
+                                }
+                            }
+                        }
+                    } else
+                    {
+                        $count = 0;
+                        foreach ($pieces as $piece)
+                        {
+                            if (str_contains($piece, $not_include))
+                            {
+                                continue;
+                            }
+                            if ($count === 20)
+                            {
+                                break;
+                            }
+
+                            echo $piece . "\n\n";
+                            $count++;
+
                         }
                     }
-                }
-                else
-                {
-                    $pieces = array_slice($pieces, -20);
-                    foreach ($pieces as $piece){
-                            echo $piece."\n\n";
-
-                    }
-                }
-                ?></pre>
+                    ?></pre>
             <?php } ?>
             <div>
                 <?php if ($currentFile): ?>

@@ -124,7 +124,7 @@ class CILogViewer {
      * @param $fileName optional base64_encoded filename of the log file to process.
      * @returns the parse view file content as a string that can be echoed
      * */
-    public function showLogs()
+    public function showLogs($search = NULL,$not_include = NULL)
     {
 
 
@@ -196,8 +196,9 @@ class CILogViewer {
         {
             $logs = [];
         }
-
+        $data['search'] = $search;
         $data['is_content'] = $is_content;
+        $data['not_include'] = $not_include ?? NULL;
         $data['logs'] = $logs;
         $data['files'] = ! empty($files) ? $files : [];
         $data['currentFile'] = ! is_null($currentFile) ? basename($currentFile) : "";
